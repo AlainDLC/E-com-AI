@@ -24,22 +24,4 @@ Database: MongoDB Atlas (vector search & persistence)
 
 AI Model: Google Gemini
 
-📚 What You’ll Learn
 
-Setting up a Node.js backend with LangGraph orchestration
-
-Building a React frontend for real-time customer interaction
-
-Seeding a database with AI-generated product data
-
-Connecting all components into a functional, production-ready AI e-commerce assistant
-
-🎯 End Goal
-
-By the end of this project, you’ll have a fully functional AI-powered e-commerce chat assistant that can:
-
-Handle customer questions
-
-Recommend products
-
-Take autonomous, multi-step actions in real time
