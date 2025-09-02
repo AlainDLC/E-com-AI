@@ -23,7 +23,7 @@ async function retryWithBackOff<T>(
   fn: () => Promise<T>,
   maxRetries = 3
 ): Promise<T> {
-  for (let attempt = 1; attempt >= maxRetries; attempt++) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       return await fn();
     } catch (error) {
@@ -34,7 +34,7 @@ async function retryWithBackOff<T>(
         error.status === 429 &&
         attempt < maxRetries
       ) {
-        const delay = Math.min(1000 * Math.pow(2, attempt), 3000);
+        const delay = Math.min(1000 * Math.pow(2, attempt), 30000);
         console.error(`Rate limit hit, Retrying in ${delay / 1000} sec`, error);
         await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
@@ -96,8 +96,11 @@ export async function callAgent(
             dbConfig
           );
           console.log("Performing vector search");
+          const embedding = await vectorStore.embeddings.embedQuery(query);
+
+          // Skicka embedding-arrayen till similaritySearchVectorWithScore
           const result = await vectorStore.similaritySearchVectorWithScore(
-            query,
+            embedding,
             n
           );
           console.log(`Vector search returned ${result.length} result`);
@@ -105,13 +108,15 @@ export async function callAgent(
           if (result.length === 0) {
             console.log(`Vector search no result..`);
 
+            const cleanQuery = query.trim(); // ta bort extra mellanslag
+
             const textResults = await collection
               .find({
                 $or: [
-                  { item_name: { $regex: query, $options: "i" } },
-                  { item_description: { $regex: query, $options: "i" } },
-                  { categories: { $regex: query, $options: "i" } },
-                  { embedding_text: { $regex: query, $options: "i" } },
+                  { item_name: { $regex: cleanQuery, $options: "i" } },
+                  { item_description: { $regex: cleanQuery, $options: "i" } },
+                  { categories: { $regex: cleanQuery, $options: "i" } },
+                  { embedding_text: { $regex: cleanQuery, $options: "i" } },
                 ],
               })
               .limit(n)
@@ -153,7 +158,7 @@ export async function callAgent(
         description:
           "Gathers motorcykle item details from the Inventory database",
         schema: z.object({
-          query: z.string().describe("The search"),
+          query: z.string().describe("The search query"),
           n: z
             .number()
             .optional()
@@ -182,7 +187,7 @@ export async function callAgent(
         return "tools";
       }
 
-      return "__end__";
+      return "_end_";
     }
 
     async function callModel(state: typeof GraphState.State) {
@@ -215,15 +220,15 @@ export async function callAgent(
       });
     }
 
-    const workflow = GraphState(GraphState)
+    const workflow = new StateGraph(GraphState)
       .addNode("agent", callModel)
       .addNode("tools", toolNode)
-      .addNode("__start__", "agent")
+      .addEdge("__start__", "agent")
       .addConditionalEdges("agent", shouldContinue)
-      .addNode("tools", "agenr");
+      .addEdge("tools", "agent");
 
     const checkpointer = new MongoDBSaver({ client, dbName });
-    const app = workflow.copile({ checkpointer });
+    const app = workflow.compile({ checkpointer });
 
     const finalState = await app.invoke(
       {
