@@ -3,7 +3,7 @@ import EcommerceStore from "../src/components/EcommerceStore";
 
 function App() {
   return (
-    <div className="App">
+    <div className="app">
       <EcommerceStore />
     </div>
   );

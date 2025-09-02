@@ -8,58 +8,52 @@ function EcommerceStore() {
     <>
       <header className="header">
         <div className="container">
+          <div className="logo">Yes</div>
           <div className="top-bar">
-            <div className="logo">
-              <div className="search-bar">
-                <input
-                  id="#"
-                  type="text"
-                  placeholder="Search for products...."
-                />
-                <button>
-                  <FaSearch />
-                </button>
-              </div>
-              <div className="nav-icons">
-                <a href="#account">
-                  <FaUser size={20} />
-                </a>
-                <a href="#wishlist">
-                  <FaHeart size={20} />
-                  <span className="badge">{3}</span>
-                </a>
-                <a href="#cart">
-                  <FaShoppingCart size={20} />
-                  <span className="badge">{3}</span>
-                </a>
-              </div>
+            <div className="search-bar">
+              <input type="text" placeholder="Search for products...." />
+              <button>
+                <FaSearch />
+              </button>
             </div>
-
-            <nav className="nav-bar">
-              <ul>
-                <li>
-                  <a href="#" className="active">
-                    Home
-                  </a>
-                </li>
-                <li>
-                  <a href="#">Electronics</a>
-                </li>
-                <li>
-                  <a href="#">Clothing</a>
-                </li>
-                <li>
-                  <a href="#">Home</a>
-                </li>
-                <li>
-                  <a href="#">Sports</a>
-                </li>
-                <li>
-                  <a href="#">Deals</a>
-                </li>
-              </ul>
-            </nav>
+            <div className="nav-icons">
+              <a href="#account">
+                <FaUser size={20} />
+              </a>
+              <a href="#wishlist">
+                <FaHeart size={20} />
+                <span className="badge">{3}</span>
+              </a>
+              <a href="#cart">
+                <FaShoppingCart size={20} />
+                <span className="badge">{3}</span>
+              </a>
+            </div>
           </div>
+          <nav className="nav-bar">
+            <ul>
+              <li>
+                <a href="#" className="active">
+                  Home
+                </a>
+              </li>
+              <li>
+                <a href="#">Electronics</a>
+              </li>
+              <li>
+                <a href="#">Clothing</a>
+              </li>
+              <li>
+                <a href="#">Home</a>
+              </li>
+              <li>
+                <a href="#">Sports</a>
+              </li>
+              <li>
+                <a href="#">Deals</a>
+              </li>
+            </ul>
+          </nav>
         </div>
       </header>
       <main>
