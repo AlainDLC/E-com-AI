@@ -11,7 +11,11 @@ function EcommerceStore() {
           <div className="top-bar">
             <div className="logo">
               <div className="search-bar">
-                <input type="text" placeholder="Search for products...." />
+                <input
+                  id="#"
+                  type="text"
+                  placeholder="Search for products...."
+                />
                 <button>
                   <FaSearch />
                 </button>
@@ -26,7 +30,7 @@ function EcommerceStore() {
                 </a>
                 <a href="#cart">
                   <FaShoppingCart size={20} />
-                  <span className="cart">{3}</span>
+                  <span className="badge">{3}</span>
                 </a>
               </div>
             </div>
@@ -110,7 +114,7 @@ function EcommerceStore() {
                 </li>
               </ul>
             </div>
-            <div className="footer-colum">
+            <div className="footer-column">
               <h3>About us</h3>
               <ul>
                 <li>
@@ -152,7 +156,7 @@ function EcommerceStore() {
             </div>
           </div>
           <div className="copyright">
-            &copy {new Date().getFullYear()} AI SHOP All rigths reserved
+            &copy; {new Date().getFullYear()} AI SHOP All rigths reserved
           </div>
         </div>
       </footer>

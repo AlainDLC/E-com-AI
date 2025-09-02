@@ -1,7 +1,13 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { FaRobot, FaPaperPlane, FaTimes, FaCommentDots } from "react-icons/fa";
 
-function ChatWidget() {
-  return <div>ChatWidget</div>;
-}
+const isOpen = true;
+const ChatWidget = () => {
+  return (
+    <div className={`chat-widget-container ${isOpen ? "open" : ""}`}>
+      ChatWidget
+    </div>
+  );
+};
 
 export default ChatWidget;
