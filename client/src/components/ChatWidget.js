@@ -46,6 +46,41 @@ const ChatWidget = () => {
     };
     setMessages((prevMessage) => [...prevMessage, message]);
     setInputValue("");
+
+    const endpoint = thredId
+      ? `http://localhost:8000/chat${thredId}
+    `
+      : "http://localhost:8000/chat";
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: inputValue,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      const agentResponse = {
+        text: data.response,
+        isAgent: true,
+        thredId: data.thredId,
+      };
+
+      setMessages((prevMessage) => [...prevMessage, agentResponse]);
+      setTreadId(data.thredId);
+
+      console.log(message);
+
+      console.log("Succes", data);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (

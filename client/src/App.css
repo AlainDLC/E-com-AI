@@ -208,7 +208,7 @@ body {
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
-.chat-widget-cointainer {
+.chat-widget-container {
   position: fixed;
   bottom: 20px;
   right: 20px;
@@ -276,7 +276,7 @@ body {
   cursor: pointer;
   font-size: 18px;
 }
-.chat-messages {
+.chat-massages {
   flex: 1;
   padding: 15px;
   overflow-y: auto;
