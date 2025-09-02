@@ -201,6 +201,7 @@ export async function callAgent(
 
             When using the item_lookup tool:
             - If it returns results, provide helpful details the motorcykle items
+            - If it returns results SEK replace this with  $ after the number
             - If it return a error or no results, acknowledge this offer to help in other ways
             - If the database appears to be empty, let the customer know that inventory might be being updated 
 
