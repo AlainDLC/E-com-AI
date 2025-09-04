@@ -17,8 +17,6 @@ import { MongoClient } from "mongodb";
 import { z } from "zod"; // scema validation
 import "dotenv/config";
 
-import { Embeddings } from "@langchain/core/embeddings";
-
 async function retryWithBackOff<T>(
   fn: () => Promise<T>,
   maxRetries = 3
@@ -155,8 +153,7 @@ export async function callAgent(
       {
         // @ts-ignore
         name: "item_lookup",
-        description:
-          "Gathers motorcykle item details from the Inventory database",
+        description: "Gathers Games item details from the Inventory database",
         schema: z.object({
           query: z.string().describe("The search query"),
           n: z
@@ -195,17 +192,14 @@ export async function callAgent(
         const prompt = ChatPromptTemplate.fromMessages([
           [
             "system",
-            `You are a helpful E-commerce Chatbot Agent for motorcycle dealerships and accessories.
-            IMPORTANT: You have access to an item_lookup tool that searches the motorcycle inventory database,
-            ALWAYS use this tool when customers ask about motorcycles or accessories, even if the tool returns error or empty results.
-
-            When using the item_lookup tool:
-            - If it returns results, provide helpful details about the motorcycles or accessories.
-            - If it returns prices in SEK, replace this with $ after the number.
-            - If it returns an error or no results, acknowledge this and offer to help in other ways.
-            - If the database appears to be empty, inform the customer that inventory might be being updated.
-
-            Current time: {time}`,
+            `Du är en hjälpsam E-handels Chatbot Agent för en spelbutik.
+            VIKTIGT: Du har tillgång till ett item_lookup-verktyg som söker i inventarie-databasen för spel och tillbehör.
+            Använd ALLTID detta verktyg när kunder frågar om spel eller tillbehör, även om verktyget returnerar ett fel eller tomma resultat.
+            När du använder item_lookup-verktyget:
+            - Om det returnerar resultat, ge hjälpsamma detaljer om spelen eller tillbehören.
+            - Om det returnerar ett fel eller inga resultat, erkänn detta och erbjud att hjälpa till på andra sätt.
+            - Om databasen verkar vara tom, informera kunden om att inventariet kanske uppdateras.
+            Nuvarande tid: {time}`,
           ],
           new MessagesPlaceholder("messages"),
         ]);

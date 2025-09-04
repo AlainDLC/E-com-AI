@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FaRobot, FaPaperPlane, FaTimes, FaCommentDots } from "react-icons/fa";
 
-const isOpen = true;
-
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -14,7 +12,7 @@ const ChatWidget = () => {
     if (isOpen && messages.length === 0) {
       const initialMessages = [
         {
-          text: "Hello I'm your shopping assistant. How can I help you?",
+          text: "Hello I'm your Gaming assistant. How can I help you?",
           isAgent: true,
         },
       ];
@@ -90,7 +88,7 @@ const ChatWidget = () => {
           <div className="chat-header">
             <div className="chat-title">
               <FaRobot />
-              <h3>Shop Assistans</h3>
+              <h3>Inet AI support</h3>
             </div>
             <button className="close-button" onClick={toogleChat}>
               <FaTimes />
