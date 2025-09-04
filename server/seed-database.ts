@@ -1,15 +1,14 @@
+import { scrapeInet } from "./scraper";
 import {
   ChatGoogleGenerativeAI,
   GoogleGenerativeAIEmbeddings,
 } from "@langchain/google-genai";
-import {
-  StringOutputParser,
-  StructuredOutputParser,
-} from "@langchain/core/output_parsers";
+import { StructuredOutputParser } from "@langchain/core/output_parsers";
 import { MongoClient } from "mongodb";
 import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
 import { z } from "zod";
 import "dotenv/config";
+import { v4 as uuidv4 } from "uuid"; // Glöm inte att installera uuid med 'npm install uuid'
 
 const client = new MongoClient(process.env.MONGODB_ATLAS_URI as string);
 
@@ -23,118 +22,87 @@ const itemSchema = z.object({
   item_id: z.string(),
   item_name: z.string(),
   item_description: z.string(),
-  brand: z.string(),
-  manufacturer_address: z.object({
-    street: z.string(),
-    city: z.string(),
-    state: z.string(),
-    postal_code: z.string(),
-    country: z.string(),
-  }),
-  prices: z.object({
-    full_price: z.number(),
-    sale_price: z.number(),
-  }),
-  categories: z.array(z.string()),
-  user_reviews: z.array(
-    z.object({
-      review_date: z.string(),
-      rating: z.number(),
-      comment: z.string(),
-    })
-  ),
-  notes: z.string(),
+  productUrl: z.string().nullable(),
+  imageUrl: z.string().nullable(),
+  price: z.number(),
+  stock: z.number(),
 });
 
 type Item = z.infer<typeof itemSchema>;
-// @ts-ignore
-
 const parser = StructuredOutputParser.fromZodSchema(z.array(itemSchema));
-async function setupDatabaseAndCollection(): Promise<void> {
-  console.log("Setting up database and collection...");
+
+function sanitizeLLMOutput(text: string): string {
+  text = text.replace(/\r?\n/g, " ").replace(/\t/g, " ");
+  text = text.replace(/,(\s*])/g, "]");
+  const match = text.match(/\[.*\]/s);
+  if (match) text = match[0];
+  if (!text.startsWith("[")) text = `[${text}]`;
+  return text;
+}
+
+async function setupDatabaseAndCollection() {
   const db = client.db("inventory_database");
   const collections = await db.listCollections({ name: "items" }).toArray();
-
-  // create collection
-  if (collections.length === 0) {
+  if (!collections.length) {
     await db.createCollection("items");
-    console.log("Created collection...");
+    console.log("Created collection 'items'");
   } else {
-    console.log("Created collection alredy exists");
+    console.log("Collection 'items' already exists");
   }
 }
 
-async function createVectorSearchIndex(): Promise<void> {
+async function createVectorSearchIndex() {
+  const db = client.db("inventory_database");
+  const collection = db.collection("items");
+
+  const indexes = await collection.listIndexes().toArray();
+  const vectorIndexExists = indexes.some((idx) => idx.name === "vector_index");
+
+  if (vectorIndexExists) {
+    console.log("Vector search index already exists ✅");
+    return;
+  }
+
+  console.warn(
+    "⚠️ Skipping vector index creation. Max FTS indexes reached or free-tier limitation."
+  );
+}
+
+async function generateSynteticData(scrapedData: any[]): Promise<Item[]> {
+  const prompt = `You are a helpful assistant. Take the following scraped data and complete it into full item records:
+${JSON.stringify(scrapedData)}
+
+Each item must have fields: item_id, item_name, item_description, stock, productUrl, imageUrl, price .
+Ensure realistic values and maintain the original scraped info. Add a unique UUID for each item_id.
+Return only valid JSON array.`;
+
+  const response = await llm.invoke(prompt);
+  let text = sanitizeLLMOutput(response.content as string);
+
   try {
-    const db = client.db("inventory_database");
-    const collection = db.collection("items");
-    await collection.dropIndexes();
-    const vectorSearchIdx = {
-      name: "vector_index",
-      type: "vectorSearch",
-      definition: {
-        fields: [
-          {
-            type: "vector",
-            path: "embedding",
-            numdimensions: 768,
-            similarity: "cosine",
-          },
-        ],
-      },
-    };
-
-    console.log("Createing vector search index");
-    await collection.createSearchIndex(vectorSearchIdx);
-    console.log("Success Createing vector search index");
-  } catch (error) {
-    console.error("Failed createVectorSearchIndex", error);
+    return parser.parse(text);
+  } catch {
+    console.error("Failed to parse LLM output. Using fallback.", text);
+    try {
+      const fallback = JSON.parse(text).map((item: any) => ({
+        ...item,
+        price: item.price || 0,
+        item_description: item.item_description || "No description available",
+        item_id: item.item_id || uuidv4(), // Fallback for item_id
+      })) as Item[];
+      return fallback;
+    } catch (e) {
+      console.error("Fallback parsing also failed:", e);
+      return [];
+    }
   }
-}
-
-async function generateSynteticData(): Promise<Item[]> {
-  const promt = `You are a helpful assistant that generates motorcycle
-    store item data. Generate 10 motorcycle store items, Each record should
-    include the following fields: item_id, item_name, item_description, brand,
-    manufacturer_address, prices, categories, user_reviews, notes.
-    Ensure variety in the data and realistic values.
-    ${parser.getFormatInstructions()}
-    `;
-
-  console.log("Generate syntetic data...");
-
-  const response = await llm.invoke(promt);
-
-  return parser.parse(response.content as string);
-}
-
-async function createItemSummary(item: Item): Promise<string> {
-  return new Promise((resolve) => {
-    const manufacturerDetails = `Made in ${item.manufacturer_address.country}`;
-    const categories = item.categories.join(", ");
-    const userReviews = item.user_reviews
-      .map(
-        (review) =>
-          `Rated ${review.rating} on ${review.review_date}: ${review.comment}`
-      )
-      .join(" ");
-    const basicInfo = `${item.item_name} ${item.item_description} from brand ${item.brand}`;
-    const price = `At full price ${item.prices.full_price} SEK, On sale ${item.prices.sale_price} SEK`;
-    const notes = item.notes;
-
-    const summary = `${basicInfo}. Manufacturer: ${manufacturerDetails}.
-    Categoriews: ${categories}. Revies: ${userReviews}. Price: ${price}.
-    Notes: ${notes}`;
-
-    resolve(summary);
-  });
 }
 
 async function seedDatabase(): Promise<void> {
   try {
     await client.connect();
     await client.db("admin").command({ ping: 1 });
-    console.log("You are conncted Mongodb");
+    console.log("You are connected to MongoDB");
     await setupDatabaseAndCollection();
     await createVectorSearchIndex();
 
@@ -144,38 +112,56 @@ async function seedDatabase(): Promise<void> {
     await collection.deleteMany({});
     console.log("Cleared existing data from items collection");
 
-    const synteticData = await generateSynteticData();
+    const scrapedData: any[] = await scrapeInet();
+    console.log("🔍 Scraped data:", scrapedData.length, "items");
 
-    const recordsWithSummaries = await Promise.all(
-      synteticData.map(async (record) => ({
-        pageContent: await createItemSummary(record),
-        metadata: { ...record },
-      }))
-    );
+    if (!scrapedData.length) {
+      console.error("⚠️ No scraped data found.");
+      await client.close();
+      return;
+    }
 
-    for (const record of recordsWithSummaries) {
-      await MongoDBAtlasVectorSearch.fromDocuments(
-        [record],
-        new GoogleGenerativeAIEmbeddings({
-          apiKey: process.env.GOOGLE_API_KEY,
-          modelName: "text-embedding-004",
-        }),
+    const fullItems = await generateSynteticData(scrapedData);
+    console.log("✨ Generated synthetic data:", fullItems.length, "items");
 
-        {
+    if (!fullItems.length) {
+      console.error(
+        "⚠️ No synthetic data was generated. Check the LLM output."
+      );
+      await client.close();
+      return;
+    }
+
+    const embeddings = new GoogleGenerativeAIEmbeddings({
+      apiKey: process.env.GOOGLE_API_KEY,
+      modelName: "text-embedding-004",
+    });
+
+    for (const record of fullItems) {
+      try {
+        const docToEmbed = {
+          pageContent: record.item_description,
+          metadata: { ...record },
+        };
+
+        await MongoDBAtlasVectorSearch.fromDocuments([docToEmbed], embeddings, {
           collection,
           indexName: "vector_index",
           textKey: "embedding_text",
           embeddingKey: "embedding",
-        }
-      );
-      console.log("saved record", record.metadata.item_id);
+        });
+        console.log("Saved record with ID:", record.item_id);
+      } catch (e) {
+        console.error(`❌ Failed to save record with ID ${record.item_id}:`, e);
+      }
     }
 
-    console.log("seeding  completed");
+    console.log("Seeding completed ✅");
   } catch (error) {
-    console.error("seedDatabase", error);
+    console.error("seedDatabase failed:", error);
   } finally {
     await client.close();
+    console.log("Connection to MongoDB closed.");
   }
 }
 
