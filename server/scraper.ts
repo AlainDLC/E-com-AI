@@ -15,7 +15,6 @@ export async function scrapeInet() {
       document.querySelectorAll('li[data-test-id^="search_product_"]')
     );
 
-    // Begränsa listan till de första 20 produkterna
     const first20Items = items.slice(0, 20);
 
     return first20Items.map((item) => {
@@ -47,10 +46,10 @@ export async function scrapeInet() {
     });
   });
 
-  console.log("Skrapning klar. Hittade", products.length, "objekt.");
+  console.log("Skrapning klar. Hittade", products);
+  console.log("Antal Spel", products.length);
   await browser.close();
 
-  // Denna rad är avgörande: returnerar datan.
   return products;
 }
 

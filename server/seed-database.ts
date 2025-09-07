@@ -25,7 +25,7 @@ const itemSchema = z.object({
   productUrl: z.string().nullable(),
   imageUrl: z.string().nullable(),
   price: z.number(),
-  stock: z.number(),
+  stock: z.number().nullable(),
 });
 
 type Item = z.infer<typeof itemSchema>;
