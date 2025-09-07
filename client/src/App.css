@@ -298,13 +298,14 @@ body {
   align-self: flex-start;
   background-color: #f0f2f5;
   color: #333;
-  border-bottom-left-radius: 5px;
+  border-bottom-left-radius: 15px;
 }
 .message-user {
   align-items: flex-end;
-  background-color: #4a00e0;
+  background-color: #6b30e0;
   color: white;
-  border-bottom-right-radius: 5px;
+  border-bottom-right-radius: 15px;
+  padding-left: 8px;
 }
 
 .chat-input-container {

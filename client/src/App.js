@@ -1,10 +1,11 @@
 import "./App.css";
-import EcommerceStore from "../src/components/EcommerceStore";
+import "./index.css";
+import GamingAILanding from "./components/GamingAILanding";
 
 function App() {
   return (
-    <div className="app">
-      <EcommerceStore />
+    <div className="app ">
+      <GamingAILanding />
     </div>
   );
 }
