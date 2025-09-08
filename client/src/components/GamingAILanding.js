@@ -35,7 +35,7 @@ function GamingAILanding() {
         {/* Video Section */}
         <div className="relative w-full max-w-md mx-auto mb-12">
           <video
-            src="/path-to-your-video.mp4"
+            src="/scraper.mp4"
             controls
             autoPlay
             loop
@@ -87,6 +87,7 @@ function GamingAILanding() {
               </p>
             </div>
           </div>
+          <p className="py-4">TECH STACK</p>
         </section>
 
         {/* Technologies Section */}
