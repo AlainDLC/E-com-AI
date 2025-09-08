@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FaRobot, FaPaperPlane, FaTimes, FaCommentDots } from "react-icons";
+import { FaRobot, FaPaperPlane, FaTimes, FaCommentDots } from "react-icons/fa";
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
